@@ -9,6 +9,7 @@ import droidefense.log4j.LoggerType;
 import droidefense.sdk.helpers.DroidDefenseEnvironment;
 import droidefense.sdk.util.Util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -341,4 +342,6 @@ public abstract class AbstractHashedFile implements Serializable {
     public void setExtensionFilename(String extensionFilename) {
         this.extensionFromFilename = extensionFilename;
     }
+
+    public abstract File getParentDir();
 }

@@ -51,8 +51,7 @@ public class DVMClass extends IDroidefenseClass implements Serializable {
 
     public IDroidefenseMethod getDirectMethod(final String name, final String descriptor, boolean getRealMethod) {
         IDroidefenseMethod[] currentMethods = getDirectMethods();
-        for (int i = 0, length = currentMethods.length; i < length; i++) {
-            IDroidefenseMethod method = currentMethods[i];
+        for (IDroidefenseMethod method : currentMethods) {
             if (name.equals(method.getName()) && descriptor.equals(method.getDescriptor())) {
                 return method;
             }

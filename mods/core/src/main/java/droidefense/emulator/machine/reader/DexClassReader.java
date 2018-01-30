@@ -84,6 +84,10 @@ public final class DexClassReader implements Serializable {
     }
 
     public IDroidefenseClass load(String name) {
+        return this.loadAndBind(name, false);
+    }
+
+    public IDroidefenseClass loadAndBind(String name, boolean bind) {
         IDroidefenseClass cls;
         name = name.replace(".", "/");
         if (pool.getClasses().containsKey(name)) {
@@ -95,7 +99,9 @@ public final class DexClassReader implements Serializable {
         }
         if (!cls.isBinded()) {
             if (!cls.isFake()) {
-                initializeLoadedClass(cls);
+                if(bind){
+                    initializeLoadedClass(cls);
+                }
             } else {
                 //class is fake, so no need to initialize varaibles and static attibutes
                 Log.write(LoggerType.DEBUG, "Fake class no need to be binded");

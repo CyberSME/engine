@@ -12,6 +12,9 @@ import droidefense.sdk.util.ExecutionTimer;
 import droidefense.sdk.util.InternalConstant;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 
 /**
@@ -50,19 +53,23 @@ public final class AndroidStaticPluginAnalysis extends AbstractAndroidAnalysis {
                     Log.write(LoggerType.TRACE, "");
                     Class aClass;
                     try {
-                        ClassLoader classLoader = this.getClass().getClassLoader();
                         String pluginFullName = PLUGIN_PACKAGE_NAME + pluginName.replace(".class", "");
                         Log.write(LoggerType.DEBUG, "Loading plugin: " + pluginFullName);
-                        aClass = classLoader.loadClass(pluginFullName);
-                        Log.write(LoggerType.TRACE, "Executing plugin: " + aClass.getName());
-                        AbstractStaticPlugin staticPlugin = (AbstractStaticPlugin) aClass.newInstance();
+                        aClass = getClass(plugin, pluginFullName);
+                        if(aClass!=null){
+                            Log.write(LoggerType.TRACE, "Executing plugin: " + aClass.getName());
+                            AbstractStaticPlugin staticPlugin = (AbstractStaticPlugin) aClass.newInstance();
 
-                        staticPlugin.setApk(apkFile);
-                        staticPlugin.setCurrentProject(currentProject);
-                        staticPlugin.analyze();
+                            staticPlugin.setApk(apkFile);
+                            staticPlugin.setCurrentProject(currentProject);
+                            staticPlugin.analyze();
 
-                        //add result to currentProject
-                        currentProject.addStaticPlugin(staticPlugin);
+                            //add result to currentProject
+                            currentProject.addStaticPlugin(staticPlugin);
+                        }
+                        else{
+                            Log.write(LoggerType.FATAL, "Could not load external plugin");
+                        }
                     } catch (Exception e) {
                         Log.write(LoggerType.FATAL, "Fatal error while executing external plugin", e.getLocalizedMessage());
                         addError(e);
@@ -79,6 +86,37 @@ public final class AndroidStaticPluginAnalysis extends AbstractAndroidAnalysis {
         stop();
         this.timeStamp.stop();
         return executionSuccessful;
+    }
+
+    //TODO load external .class file successfully
+    private Class getClass(AbstractHashedFile plugin, String fullClassName) {
+        File file = plugin.getParentDir();
+
+        if(file!=null){
+            //convert the file to URL format
+            URL url;
+            try {
+                url = file.toURI().toURL();
+                URL[] urls = new URL[]{url};
+
+                //load this folder into Class loader
+                ClassLoader cl = new URLClassLoader(urls);
+                return cl.loadClass(fullClassName+".class");
+
+                //print the location from where this class was loaded
+            /*
+            ProtectionDomain pDomain = cls.getProtectionDomain();
+            CodeSource cSource = pDomain.getCodeSource();
+            URL urlfrom = cSource.getLocation();
+            System.out.println(urlfrom.getFile());
+            */
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     @Override

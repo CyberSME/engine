@@ -96,4 +96,9 @@ public class LocalHashedFile extends AbstractHashedFile implements Serializable 
     public byte[] getContent() throws IOException {
         return Files.readAllBytes(Paths.get(f.getAbsolutePath()));
     }
+
+    @Override
+    public File getParentDir() {
+        return this.f.getParentFile();
+    }
 }

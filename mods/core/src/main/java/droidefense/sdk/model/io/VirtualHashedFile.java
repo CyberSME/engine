@@ -5,10 +5,7 @@ import droidefense.sdk.util.Util;
 import droidefense.ssdeep.exception.SSDeepException;
 import droidefense.vfs.model.impl.VirtualFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
 
 public class VirtualHashedFile extends AbstractHashedFile implements Serializable {
 
@@ -54,6 +51,11 @@ public class VirtualHashedFile extends AbstractHashedFile implements Serializabl
     @Override
     public byte[] getContent() throws IOException {
         return vf.getContent();
+    }
+
+    @Override
+    public File getParentDir() {
+        return null;
     }
 
     @Override

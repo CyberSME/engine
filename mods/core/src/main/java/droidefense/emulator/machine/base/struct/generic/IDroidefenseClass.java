@@ -167,7 +167,7 @@ public abstract class IDroidefenseClass {
 
     public IDroidefenseMethod findClassInitMethod() {
         //first: check if current class has a method init (constructor method)
-        IDroidefenseMethod init = this.getSimpleConstructorMethod();
+        IDroidefenseMethod init = this.getInitMethod();
         if (init == null) {
             //this class does not has a constructor. it is inherited
             //look for it
@@ -180,12 +180,16 @@ public abstract class IDroidefenseClass {
         }
     }
 
-    private IDroidefenseMethod getSimpleConstructorMethod() {
-        IDroidefenseMethod init = this.getDirectMethod("<clinit>", "()V", true);
-        if (init == null) {
-            init = this.getDirectMethod("<init>", "()V", true);
+    public IDroidefenseMethod getInitMethod() {
+        IDroidefenseMethod[] currentMethods = getDirectMethods();
+        for (IDroidefenseMethod method : currentMethods) {
+            if ( (method.getName().equals("<init>") || method.getName().equals("<clinit>"))
+                    && method.getDescriptor().matches("\\(.*\\)V")
+                    ) {
+                return method;
+            }
         }
-        return init;
+        return null;
     }
 
     public IDroidefenseClass getTopParentClass() {

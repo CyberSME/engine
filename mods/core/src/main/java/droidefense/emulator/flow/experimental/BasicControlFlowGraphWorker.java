@@ -20,8 +20,8 @@ import java.util.Vector;
 
 public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker {
 
-    private int[] lowerCodes;
-    private int[] upperCodes;
+    private int[] opCodes;
+    private int[] registerCodes;
     private int[] codes;
 
     public BasicControlFlowGraphWorker(DroidefenseProject project) {
@@ -40,21 +40,27 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
     @Override
     public strictfp void execute(boolean keepScanning) throws Throwable {
 
-        IDroidefenseFrame frame = getCurrentFrame();
-        IDroidefenseMethod method = frame.getMethod();
-
-        lowerCodes = method.getOpcodes();
-        upperCodes = method.getRegisterOpcodes();
-        codes = method.getIndex();
-
-        keepScanning = true;
         boolean methodEnded = false;
+        IDroidefenseFrame frame = getCurrentFrame();
+        if(frame!=null){
+            IDroidefenseMethod method = frame.getMethod();
 
-        fromNode = EntryPointNode.builder();
-        toNode = buildMethodNode(DalvikInstruction.DALVIK_0x0, frame, method);
-        createNewConnection(fromNode, toNode, DalvikInstruction.DALVIK_0x0);
-        fromNode = toNode;
-        toNode = null;
+            opCodes = method.getOpcodes();
+            registerCodes = method.getRegisterOpcodes();
+            codes = method.getIndex();
+
+            keepScanning = true;
+            methodEnded = false;
+
+            fromNode = EntryPointNode.builder();
+            toNode = buildMethodNode(DalvikInstruction.DALVIK_0x0, frame, method);
+            createNewConnection(fromNode, toNode, DalvikInstruction.DALVIK_0x0);
+            fromNode = toNode;
+            toNode = null;
+        }
+        else{
+            keepScanning=false;
+        }
 
         while (keepScanning) {
 
@@ -62,7 +68,7 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
             int currentInstructionOpcode;
 
             //1 ask if we have more currentInstructionOpcode to execute
-            if (currentPc >= lowerCodes.length || getFrames() == null || getFrames().isEmpty()) {
+            if (currentPc >= opCodes.length || getFrames() == null || getFrames().isEmpty()) {
                 keepScanning = false;
                 break;
             }
@@ -73,7 +79,7 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
                 continue;
             }*/
 
-            currentInstructionOpcode = lowerCodes[currentPc];
+            currentInstructionOpcode = opCodes[currentPc];
             DalvikInstruction currentInstruction = AbstractDVMThread.instructions[currentInstructionOpcode];
             Log.write(LoggerType.TRACE, currentInstruction.name() + " " + currentInstruction.description());
 
@@ -82,7 +88,7 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
                 if (isGetterOrSetterInstruction(currentInstructionOpcode)) {
                     //GETTER SETTER
                     //do not execute that DalvikInstruction. just act like if it was executed incrementing pc value properly
-                    ret = currentInstruction.execute(flowMap, frame, lowerCodes, upperCodes, codes, DalvikInstruction.CFG_EXECUTION);
+                    ret = currentInstruction.execute(flowMap, frame, opCodes, registerCodes, codes, DalvikInstruction.CFG_EXECUTION);
                 } else if (isCallMethodInstruction(currentInstructionOpcode)) {
                     //CALLS
                     InstructionReturn fakeCallReturn = fakeMethodCall(frame);
@@ -100,7 +106,7 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
                 } else {
                     //OTHER INST
                     //do not execute that DalvikInstruction. just act like if it was executed incrementing pc value properly
-                    ret = currentInstruction.execute(flowMap, frame, lowerCodes, upperCodes, codes, DalvikInstruction.CFG_EXECUTION);
+                    ret = currentInstruction.execute(flowMap, frame, opCodes, registerCodes, codes, DalvikInstruction.CFG_EXECUTION);
                 }
 
                 //check if there are more instructions to execute
@@ -139,8 +145,8 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
             getCurrentFrame().setMethod(supposedPreviousFrame.getMethod());
 
             //restore codes
-            lowerCodes = getCurrentFrame().getMethod().getOpcodes();
-            upperCodes = getCurrentFrame().getMethod().getRegisterOpcodes();
+            opCodes = getCurrentFrame().getMethod().getOpcodes();
+            registerCodes = getCurrentFrame().getMethod().getRegisterOpcodes();
             codes = getCurrentFrame().getMethod().getIndex();
             getCurrentFrame().increasePc(fakePc);
             return true;
@@ -154,7 +160,7 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
         IDroidefenseMethod method = frame.getMethod();
 
         // invoke-virtual {vD, vE, vF, vG, vA}, meth@CCCC
-        int registersBase = upperCodes[frame.increasePc()];
+        int registersBase = registerCodes[frame.increasePc()];
         int registers = registersBase << 16;
         int methodIndex = codes[frame.increasePc()];
         registers |= codes[frame.increasePc()];
