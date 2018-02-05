@@ -1,7 +1,6 @@
 package droidefense.emulator.handlers;
 
-import droidefense.emulator.flow.experimental.BasicControlFlowGraphWorker;
-import droidefense.emulator.flow.experimental.FollowCallsControlFlowGraphWorker;
+import droidefense.emulator.flow.stable.MethodInstructionsPrinterWorker;
 import droidefense.emulator.flow.stable.OpCodeCheckerWorker;
 import droidefense.emulator.flow.stable.ReferencesResolverWorker;
 import droidefense.emulator.machine.base.AbstractDVMThread;
@@ -44,12 +43,16 @@ public class VMWorkersHandler extends AbstractHandler {
                 Log.write(LoggerType.TRACE, "Adding R references resolver analysis routine...");
                 worklist.add(new ReferencesResolverWorker(currentProject));
 
+                //dalvik instruction logger
+                Log.write(LoggerType.TRACE, "Adding Simple Dalvik instructions decoder analysis routine...");
+                worklist.add(new MethodInstructionsPrinterWorker(currentProject));
+
                 //normal model reporting
                 Log.write(LoggerType.TRACE, "Adding Basic Control Flow Graph analysis routine...");
-                worklist.add(new BasicControlFlowGraphWorker(currentProject));
+                //worklist.add(new BasicControlFlowGraphWorker(currentProject));
 
                 //follow model reporting
-                worklist.add(new FollowCallsControlFlowGraphWorker(currentProject));
+                //worklist.add(new FollowCallsControlFlowGraphWorker(currentProject));
 
                 //reflection solver model reporting
                 //worklist.add(new ReflectionControlFlowGraphWorker(currentProject));

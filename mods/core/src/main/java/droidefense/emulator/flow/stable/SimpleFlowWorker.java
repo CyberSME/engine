@@ -11,6 +11,10 @@ import droidefense.sdk.util.ExecutionTimer;
 
 public abstract class SimpleFlowWorker extends AbstractFlowWorker {
 
+    protected int[] opCodes;
+    protected int[] registerCodes;
+    protected int[] codes;
+
     public SimpleFlowWorker(DroidefenseProject currentProject) {
         super(currentProject.getDalvikMachine(), currentProject);
         this.name = "SimpleFlowWorker";
@@ -41,11 +45,6 @@ public abstract class SimpleFlowWorker extends AbstractFlowWorker {
     }
 
     @Override
-    public void finish() {
-
-    }
-
-    @Override
     public int getInitialArgumentCount(IDroidefenseClass cls, IDroidefenseMethod m) {
         return DO_NOT_USE_ARGUMENTS_COUNT; //do not use arguments
     }
@@ -73,5 +72,9 @@ public abstract class SimpleFlowWorker extends AbstractFlowWorker {
         this.removeFrames();
         this.timestamp = new ExecutionTimer();
         return this;
+    }
+
+    protected boolean keepScanning(int currentPc){
+        return getFrames().size()>0 || !getFrames().isEmpty() && currentPc < opCodes.length;
     }
 }

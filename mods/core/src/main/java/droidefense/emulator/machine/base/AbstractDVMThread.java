@@ -79,7 +79,6 @@ public abstract strictfp class AbstractDVMThread implements Serializable {
         if (isStatic) {
             IDroidefenseClass cls = DexClassReader.getInstance().load(clazzName);
             //class loader always will return a class. real or fake
-            //no null check, but just in case
             return cls.getStaticField(fieldName);
         } else {
             Object object = frame.getObjectRegisters()[registerIndex];

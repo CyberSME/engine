@@ -17,13 +17,13 @@ import droidefense.sdk.model.base.DroidefenseProject;
 
 import java.util.Vector;
 
-public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker {
+public final strictfp class SimpleConnectionFlowGraphWorker extends SimpleFlowWorker {
 
     private int[] opCodes;
     private int[] registerCodes;
     private int[] codes;
 
-    public BasicControlFlowGraphWorker(DroidefenseProject project) {
+    public SimpleConnectionFlowGraphWorker(DroidefenseProject project) {
         super(project);
         this.name = "BasicControlFlowGraphWorker";
         flowMap = new BasicCFGFlowMap();
@@ -61,8 +61,7 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
             int currentInstructionOpcode;
 
             //1 ask if we have more currentInstructionOpcode to execute
-            boolean noMoreInstructions = currentPc >= opCodes.length || getFrames() == null || getFrames().isEmpty();
-            if (noMoreInstructions) {
+            if (currentPc >= opCodes.length || getFrames() == null || getFrames().isEmpty()) {
                 keepScanning = false;
                 break;
             }
@@ -71,9 +70,56 @@ public final strictfp class BasicControlFlowGraphWorker extends SimpleFlowWorker
             DalvikInstruction currentInstruction = AbstractDVMThread.instructions[currentInstructionOpcode];
             Log.write(LoggerType.TRACE, currentInstruction.name() + " " + currentInstruction.description());
 
-            frame.increasePc(currentInstruction.fakePcIncrement());
+            try {
+                boolean isGetterOrSetter = isGetterOrSetterInstruction(currentInstructionOpcode);
+                if (isGetterOrSetter) {
+                    //GETTER or SETTER
+                    //do not execute that DalvikInstruction. just act like if it was executed incrementing pc value properly
+                    InstructionReturn ret = currentInstruction.execute(flowMap, frame, opCodes, registerCodes, codes, DalvikInstruction.CFG_EXECUTION);
+                    //InstructionReturn ret = fakeMethodCall(frame);
+                    toNode = buildMethodNode(currentInstruction, frame, ret.getMethod());
+                    //create the connection
+                    createNewConnection(fromNode, toNode, currentInstruction);
+                } else if (isCallMethodInstruction(currentInstructionOpcode)) {
+                    //CALLS
+                    InstructionReturn fakeCallReturn = fakeMethodCall(frame);
+                    //create invokated method as node
+                    toNode = buildMethodNode(currentInstruction, frame, fakeCallReturn.getMethod());
+                    //create the connection
+                    createNewConnection(fromNode, toNode, currentInstruction);
+                    fromNode = toNode;
+                } else if (isNOPInstruction(currentInstructionOpcode)) {
+                    //NOP
+                    //nop of increases pc by one
+                    frame.increasePc(1);
+                } else if (isVoidInstruction(currentInstructionOpcode)) {
+                    //return-void
+                    methodEnded = true;
+                } else {
+                    //OTHER INST
+                    //do not execute that DalvikInstruction. just act like if it was executed incrementing pc value properly
+                    InstructionReturn ret = currentInstruction.execute(flowMap, frame, opCodes, registerCodes, codes, DalvikInstruction.CFG_EXECUTION);
+                    //create invokated method as node
+                    /*toNode = buildMethodNode(currentInstruction, frame, ret.getMethod());
+                    //create the connection
+                    createNewConnection(fromNode, toNode, currentInstruction);*/
+                }
 
-
+                //check if there are more instructions to execute
+                if (methodEnded) {
+                    //method instructions are all executed. this method is ended. stop loop
+                    keepScanning = false;
+                    methodEnded = false;
+                    //keepScanning = goBack(1);
+                }
+                //build connection
+                /*toNode = buildMethodNode(currentInstruction, frame);
+                createNewConnection(fromNode, toNode, currentInstruction);
+                fromNode = toNode;
+                toNode = null;*/
+            } catch (Exception e) {
+                Log.write(LoggerType.FATAL, "Excepcion during observation", e, e.getLocalizedMessage());
+            }
         }
     }
 

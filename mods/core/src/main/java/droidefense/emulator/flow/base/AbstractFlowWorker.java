@@ -9,6 +9,7 @@ import droidefense.emulator.machine.inst.DalvikInstruction;
 import droidefense.rulengine.base.AbstractAtomNode;
 import droidefense.rulengine.base.AbstractFlowMap;
 import droidefense.rulengine.base.NodeConnection;
+import droidefense.rulengine.nodes.EntryPointNode;
 import droidefense.rulengine.nodes.FieldNode;
 import droidefense.rulengine.nodes.MethodNode;
 import droidefense.rulengine.nodes.NormalNode;
@@ -28,6 +29,10 @@ public abstract class AbstractFlowWorker extends AbstractDVMThread {
         super(currentProject);
     }
 
+    protected final MethodNode buildMethodNode(DalvikInstruction inst, IDroidefenseFrame frame) {
+        return reporting.buildMethodNode(flowMap, inst, frame);
+    }
+
     protected final MethodNode buildMethodNode(DalvikInstruction inst, IDroidefenseFrame frame, IDroidefenseMethod method) {
         return reporting.buildMethodNode(flowMap, inst, frame, method);
     }
@@ -45,10 +50,15 @@ public abstract class AbstractFlowWorker extends AbstractDVMThread {
     }
 
     protected final void createNewConnection(AbstractAtomNode from, AbstractAtomNode to, DalvikInstruction currentInstruction) {
+        //if from value is null, set as entrypoint by default
+        if(from == null){
+            from = EntryPointNode.builder();
+        }
         from = flowMap.addNode(from);
         to = flowMap.addNode(to);
         //avoid connections with itself
-        if (true || !from.getConnectionLabel().equals(to.getConnectionLabel())) {
+        boolean writeCondition = !from.getConnectionLabel().equals(to.getConnectionLabel());
+        if (true || writeCondition) {
             NodeConnection conn = new NodeConnection(from, to, currentInstruction.description());
             flowMap.addConnection(conn);
         }

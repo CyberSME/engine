@@ -25,6 +25,11 @@ public class NodeGenerator {
         return instance;
     }
 
+    public final MethodNode buildMethodNode(AbstractFlowMap map, DalvikInstruction inst, IDroidefenseFrame frame) {
+        IDroidefenseMethod method = frame.getMethod();
+        return this.buildMethodNode(map, inst, frame, method);
+    }
+
     public final MethodNode buildMethodNode(AbstractFlowMap map, DalvikInstruction inst, IDroidefenseFrame frame, IDroidefenseMethod method) {
         String nodeType = environment.classifyNode(method.getOwnerClass().getName());
         String color = environment.classifyNodeColor(method.getOwnerClass().getName(), nodeType);
