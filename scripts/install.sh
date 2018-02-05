@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#set current location at this script location
+SCRIPT_PATH="`dirname \"$0\"`"
+#now script is located at ./scripts/ folder. Move to parent
+cd $SCRIPT_PATH/..
+
+source ./scripts/colors.sh
+
 installation_path="/usr/bin/droidefense.jar"
 
 function install_on_system(){
@@ -83,7 +90,5 @@ function create_alias(){
 }
 
 set -e
-
-source colors.sh
 
 install_on_system

@@ -30,3 +30,20 @@ function ok(){
 function log(){
 	echo "${bold_yellow}[ LOG ] $1${reset}"
 }
+
+function title(){
+	#convert to uppercase
+	val=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+	echo "
+${bold_white}
+ $val
+${reset}"
+}
+
+function subtitle(){
+	#convert to lowercase
+	val=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+	echo "${bold_white}
+	$val
+${reset}"
+}

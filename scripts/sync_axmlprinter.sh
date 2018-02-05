@@ -1,6 +1,13 @@
 #!/bin/bash
 
-echo "Downloading latest version of axmlprinter"
+#set current location at this script location
+SCRIPT_PATH="`dirname \"$0\"`"
+#now script is located at ./scripts/ folder. Move to parent
+cd $SCRIPT_PATH/..
+
+source ./scripts/colors.sh
+
+title "Downloading latest version of axmlprinter"
 cloneFolder=rednaga_axmlprinter
 targetFolder=axmlprinter
 if [[ ! -d $cloneFolder ]]; then
@@ -9,40 +16,38 @@ fi
 base=$(pwd)
 cd $cloneFolder
 
-echo "Deleting old files..."
+subtitle "Deleting old files..."
 
 oldFilesFolder="$base/mods/$targetFolder/"
 if [[ -d $oldFilesFolder ]]; then
-	echo "rm -rf $oldFilesFolder"
+	log "rm -rf $oldFilesFolder"
 	rm -rf $oldFilesFolder
 else
 	mkdir -p $oldFilesFolder
 fi
 
-echo "Syncing files..."
-
-echo "	Syncing src..."
+subtitle "Syncing files..."
 
 if [[ ! -d $base/mods/$targetFolder/src/main/ ]]; then
 	mkdir -p $base/mods/$targetFolder/src/main/
 fi
 cmd="cp -ra $base/$cloneFolder/src/main/. $base/mods/$targetFolder/src/main/"
-echo $cmd
+log $cmd
 $cmd
 
-echo "	Syncing tests..."
+subtitle "	Syncing tests..."
 if [[ ! -d $base/mods/$targetFolder/src/test/ ]]; then
 	mkdir -p $base/mods/$targetFolder/src/test/
 fi
 cmd="cp -ra $base/$cloneFolder/src/test/. $base/mods/$targetFolder/src/test/"
-echo $cmd
+log $cmd
 $cmd
 
 #remove temp files
-echo "removing temp files..."
-echo rm -rf $base/$cloneFolder
+subtitle "removing temp files..."
+log "rm -rf $base/$cloneFolder"
 rm -rf $base/$cloneFolder
 
-cd  $base/$targetFolder
+cd  $base/mods/$targetFolder
 git checkout axmlprinter.iml pom.xml
 cd $base

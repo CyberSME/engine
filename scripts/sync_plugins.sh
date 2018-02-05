@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#set current location at this script location
+SCRIPT_PATH="`dirname \"$0\"`"
+#now script is located at ./scripts/ folder. Move to parent
+cd $SCRIPT_PATH/..
+
+source ./scripts/colors.sh
+
 function command_exists() {
   #this should be a very portable way of checking if something is on the path
   #usage: "if command_exists foo; then echo it exists; fi"
